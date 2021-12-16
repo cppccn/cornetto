@@ -1,6 +1,6 @@
-use anyhow::{Result, bail};
+use anyhow::{bail, Result};
 use proc_macro2::Ident;
-use syn::{Type, Lit};
+use syn::{Lit, Type};
 
 pub struct CornettoField {
     pub ident: Ident,
@@ -45,16 +45,15 @@ impl CornettoField {
                                 bail!("Duplication of fields value")
                             }
                             value = Some(lit)
-                        }
-                        //_ => bail!("Not covered meta type")
+                        } //_ => bail!("Not covered meta type")
                     };
-                };
+                }
             }
             ret.push(CornettoField {
                 kind: kind.expect("Field needs to be const or mut"),
                 ident: field.ident.clone().unwrap(),
                 value: value.expect("Expected field value literal"),
-                ty: field.ty.clone()
+                ty: field.ty.clone(),
             });
         }
         Ok(ret)

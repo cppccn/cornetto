@@ -1,7 +1,7 @@
 #![feature(proc_macro_quote)]
 mod fields;
-use anyhow::{Result, bail};
-use proc_macro2::{Span, TokenStream, Ident};
+use anyhow::{bail, Result};
+use proc_macro2::{Ident, Span, TokenStream};
 use quote::{quote, quote_spanned};
 
 #[proc_macro_derive(Cornetto, attributes(cornetto))]
@@ -16,16 +16,24 @@ fn impl_cornetto(input: &syn::DeriveInput) -> Result<TokenStream> {
     }
     match &input.data {
         syn::Data::Struct(ds) => impl_quotes_cornetto(&input.ident, ds),
-        _ => bail!("`#![derive(Cornetto)]` cannot be applied to other than structs")
+        _ => bail!("`#![derive(Cornetto)]` cannot be applied to other than structs"),
     }
 }
 
-fn quote_default_value(name: &syn::Ident, field: &fields::CornettoField, constants: &mut TokenStream) -> Ident {
-    let name = format!("DEFAULT_{}_{}", name.to_string().to_uppercase(), field.ident.to_string().to_uppercase());
+fn quote_default_value(
+    name: &syn::Ident,
+    field: &fields::CornettoField,
+    constants: &mut TokenStream,
+) -> Ident {
+    let name = format!(
+        "DEFAULT_{}_{}",
+        name.to_string().to_uppercase(),
+        field.ident.to_string().to_uppercase()
+    );
     let ident = Ident::new(&name, Span::mixed_site());
     let ty = field.ty.clone();
     let value = field.value.clone();
-    constants.extend(quote_spanned!{Span::mixed_site()=>
+    constants.extend(quote_spanned! {Span::mixed_site()=>
         const #ident: #ty = #value;
     });
     ident
@@ -44,27 +52,34 @@ fn impl_quotes_cornetto(name: &syn::Ident, ds: &syn::DataStruct) -> Result<Token
         let const_name = quote_default_value(name, &field, &mut constants);
         let name = field.ident;
         let ty = field.ty;
-        default_fields.push(quote!{
+        default_fields.push(quote! {
             #name: #const_name,
         });
-        fn_impl.push(quote_spanned!{Span::mixed_site()=>
-            #[cfg(not(test))]
-            pub fn #name(&self) -> #ty {
-                #const_name
+        match field.kind {
+            fields::CornettoKind::Testmutable => {
+                fn_impl.push(quote_spanned! {Span::mixed_site()=>
+                    #[cfg(not(test))]
+                    pub fn #name(&self) -> #ty {
+                        #const_name
+                    }
+                    #[cfg(test)]
+                    pub fn #name(&self) -> u64 {
+                        self.p_fields.lock().unwrap().#name
+                    }
+                });
+                test_mut_fields.push(quote!(#name: #ty,));
+                test_mut_fields_lock.push(quote!(lock.#name = #name;));
             }
-        });
-        if matches!(field.kind, fields::CornettoKind::Testmutable) {
-            fn_impl.push(quote_spanned!{Span::mixed_site()=>
-                #[cfg(test)]
-                pub fn #name(&self) -> u64 {
-                    self.p_fields.lock().unwrap().#name
-                }
-            });
-            test_mut_fields.push(quote!(#name: #ty,));
-            test_mut_fields_lock.push(quote!(lock.#name = #name;));
+            fields::CornettoKind::Constant => {
+                fn_impl.push(quote_spanned! {Span::mixed_site()=>
+                    pub fn #name(&self) -> #ty {
+                        #const_name
+                    }
+                });
+            }
         }
     }
-    let default_impl = quote!{
+    let default_impl = quote! {
         impl Default for #name {
             fn default() -> Self {
                 Self {
@@ -73,7 +88,7 @@ fn impl_quotes_cornetto(name: &syn::Ident, ds: &syn::DataStruct) -> Result<Token
             }
         }
     };
-    let reset_fn = quote!{
+    let reset_fn = quote! {
         #[cfg(test)]
         pub fn _reset(&self, #(#test_mut_fields)*) {
             let mut lock = self.p_fields.lock().unwrap();
