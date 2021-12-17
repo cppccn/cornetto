@@ -12,34 +12,29 @@ use cornetto::Cornetto;
 #[allow(dead_code)]
 #[derive(Cornetto)]
 struct Test {
-    #[cornetto(mut, 200)] // mutable on test
+    #[cornetto(mut, 200)] // mutable on test ( _reset(args...) )
     pub price: u64,
     #[cornetto(const, 150)] // always const
     pub const_price: u64,
+    #[cornetto(mut, "youhouhou")]
+    pub strin: String,
 }
 
 fn main() {
     println!("{}", TEST.price() == 200);
-    println!("{}", TEST.const_price() == 200);
+    println!("{}", TEST.const_price() == 150);
+    println!("{}", TEST.strin().eq("youhouhou"));
+    // true, true and true
 }
 
 #[cfg(test)]
 mod test {
-    use cornetto::Cornetto;
-    #[allow(dead_code)]
-    #[derive(Cornetto)]
-    struct Test {
-        #[cornetto(mut, 200)]
-        pub price: u64,
-        #[cornetto(const, 150)]
-        pub const_price: u64,
-    }
-
     #[test]
     fn test_cornetto() {
-        assert_eq!(TEST.price(), 200);
-        TEST._reset(100); // only accessible from tests
-        assert_eq!(TEST.price(), 100);
+        super::TEST.price();
+        assert_eq!(super::TEST.price(), 200);
+        super::TEST._reset(100, "ho ho ho".to_string()); // only accessible from tests
+        assert_eq!(super::TEST.price(), 100);
     }
 }
 ```

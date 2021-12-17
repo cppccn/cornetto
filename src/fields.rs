@@ -1,3 +1,6 @@
+// In this file you want to read a field and parse
+// a nice structure to work with for the quotes
+
 use anyhow::{bail, Result};
 use proc_macro2::Ident;
 use syn::{Lit, Type};
@@ -45,7 +48,7 @@ impl CornettoField {
                                 bail!("Duplication of fields value")
                             }
                             value = Some(lit)
-                        } //_ => bail!("Not covered meta type")
+                        }
                     };
                 }
             }
