@@ -5,6 +5,7 @@ edition = "2021"
 description = "#[cornetto(manage my config)]"
 repository = "https://github.com/cppccn/cornetto/"
 readme = "README.md"
+authors = ["Adrien Zinger", "Yvan Sraka"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
