@@ -1,4 +1,4 @@
-# Cornetto 🥐
+# Cornetto 🥐 [![cargo version](https://img.shields.io/crates/v/cornetto.svg)](https://crates.io/crates/cornetto)
 
 A crate to combine [config](https://crates.io/crates/config) loading and CLI arg parsing with [structops](https://crates.io/crates/structops). Having a more generic solution (like a custom crate providing a handy custom macro) to load parameters (as a Rust struct) with this precedence: CLI args / ENV variables / CONFIG file values.
 
