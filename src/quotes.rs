@@ -1,4 +1,5 @@
 // In this file you want to generate quotes from the nicely parsed fields
+
 use super::fields::{CornettoField, CornettoKind};
 use anyhow::Result;
 use proc_macro2::{Ident, Span, TokenStream};
